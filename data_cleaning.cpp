@@ -207,7 +207,7 @@ void exportCleanedJobs() {
     }
     
     string line;
-    int id = 1;
+    int originalId = 1;
     
     outFile << "ID,Category,Skills" << endl;
     getline(file, line);
@@ -220,8 +220,8 @@ void exportCleanedJobs() {
             
             string skills = extractJobSkills(line);
             string category = classifyJob(line);
-            outFile << id << "," << category << ",\"" << skills << "\"" << endl;
-            id++;
+            outFile << originalId << "," << category << ",\"" << skills << "\"" << endl;
+            originalId++;
         }
     }
     
@@ -240,7 +240,7 @@ void exportCleanedResumes() {
     }
     
     string line;
-    int id = 1;
+    int originalId = 1;
     
     outFile << "ID,Skills" << endl;
     getline(file, line);
@@ -260,16 +260,16 @@ void exportCleanedResumes() {
                 }
                 
                 vector<string> validSkills = filterSkills(skills);
-                outFile << id << ",\"";
+                outFile << originalId << ",\"";
                 for (size_t i = 0; i < validSkills.size(); i++) {
                     outFile << validSkills[i];
                     if (i < validSkills.size() - 1) outFile << ", ";
                 }
                 outFile << "\"" << endl;
             } else {
-                outFile << id << ",\"No skills found\"" << endl;
+                outFile << originalId << ",\"No skills found\"" << endl;
             }
-            id++;
+            originalId++;
         }
     }
     
@@ -288,13 +288,14 @@ void loadJobDescriptions(int limit = -1)
     }
 
     string line;
-    int id = 1;
+    int originalId = 1;
+    int count = 0;
     vector<JobData> jobs;
 
     getline(file, line); // Skip header
 
     cout << "=== JOB DESCRIPTIONS WITH CLASSIFICATION ===" << endl;
-    while (getline(file, line) && (limit == -1 || id <= limit))
+    while (getline(file, line) && (limit == -1 || count < limit))
     {
         if (!line.empty())
         {
@@ -306,14 +307,15 @@ void loadJobDescriptions(int limit = -1)
 
             string skills = extractJobSkills(line);
             string category = classifyJob(line);
-            jobs.push_back(JobData(id, skills, category));
+            jobs.push_back(JobData(originalId, skills, category));
 
-            cout << "ID: " << id << endl;
+            cout << "ID: " << originalId << endl;
             cout << "Category: " << category << endl;
             cout << "Skills: " << skills << endl;
             cout << "---" << endl;
-            id++;
+            count++;
         }
+        originalId++;
     }
     file.close();
 
@@ -322,12 +324,12 @@ void loadJobDescriptions(int limit = -1)
     vector<string> categories = {"Data Analyst", "ML Engineer", "Software Engineer", "DevOps Engineer", "Product Manager", "UI/UX Designer", "Other"};
     
     for (const string& cat : categories) {
-        int count = 0;
+        int catCount = 0;
         for (const JobData& job : jobs) {
-            if (job.category == cat) count++;
+            if (job.category == cat) catCount++;
         }
-        if (count > 0) {
-            cout << cat << ": " << count << " jobs" << endl;
+        if (catCount > 0) {
+            cout << cat << ": " << catCount << " jobs" << endl;
         }
     }
 }
@@ -342,8 +344,8 @@ void loadJobsByCategory(const string& targetCategory)
     }
 
     string line;
-    int id = 1;
-    int displayId = 1;
+    int originalId = 1;
+    int count = 0;
 
     getline(file, line); // Skip header
 
@@ -363,20 +365,20 @@ void loadJobsByCategory(const string& targetCategory)
             {
                 string skills = extractJobSkills(line);
 
-                cout << "ID: " << displayId << endl;
+                cout << "ID: " << originalId << endl;
                 cout << "Skills: " << skills << endl;
                 cout << "---" << endl;
-                displayId++;
+                count++;
             }
-            id++;
+            originalId++;
         }
     }
     file.close();
     
-    if (displayId == 1) {
+    if (count == 0) {
         cout << "No jobs found in this category." << endl;
     } else {
-        cout << "\nTotal " << targetCategory << " jobs: " << (displayId - 1) << endl;
+        cout << "\nTotal " << targetCategory << " jobs: " << count << endl;
     }
 }
 
@@ -390,12 +392,13 @@ void loadResumes(int limit = -1, bool filterOutliers = true)
     }
 
     string line;
-    int id = 1;
+    int originalId = 1;
+    int count = 0;
 
     getline(file, line);
 
     cout << "\n=== RESUME SKILLS" << (filterOutliers ? " (FILTERED)" : " (UNFILTERED)") << " ===" << endl;
-    while (getline(file, line) && (limit == -1 || id <= limit))
+    while (getline(file, line) && (limit == -1 || count < limit))
     {
         if (!line.empty())
         {
@@ -415,7 +418,7 @@ void loadResumes(int limit = -1, bool filterOutliers = true)
                     skills = skills.substr(0, endPos);
                 }
 
-                cout << "ID: " << id << endl;
+                cout << "ID: " << originalId << endl;
                 if (filterOutliers) {
                     vector<string> validSkills = filterSkills(skills);
                     for (size_t i = 0; i < validSkills.size(); i++) {
@@ -430,12 +433,13 @@ void loadResumes(int limit = -1, bool filterOutliers = true)
             }
             else
             {
-                cout << "ID: " << id << endl;
+                cout << "ID: " << originalId << endl;
                 cout << "No skills section found" << endl;
                 cout << "---" << endl;
             }
-            id++;
+            count++;
         }
+        originalId++;
     }
     file.close();
 }
